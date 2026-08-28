@@ -34,6 +34,21 @@ body{display:flex;justify-content:center}
 @media(max-width:700px){
 .gift-control{gap:2px}.status{font-size:1.75vw;padding:3px 6px}.who{font-size:1.55vw;min-height:8px}.gift-control button{font-size:1.55vw;height:3.1vw;min-height:20px}
 }
+
+#adminBtn{position:absolute;left:84%;top:1.8%;width:14%;height:4%;cursor:pointer}
+.admin-card{border:1px solid #ecdcd6;border-radius:12px;padding:14px;background:#fffaf8;margin-top:12px}
+.admin-card h3{font:20px Georgia,serif;margin:0 0 10px}
+.admin-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.admin-row input,.admin-card input,.admin-card textarea{width:100%;box-sizing:border-box;border:1px solid #eadbd5;border-radius:9px;padding:10px;font-size:14px}
+.admin-card textarea{min-height:70px;resize:vertical;margin-top:10px}
+.admin-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.admin-actions button{border:0;border-radius:8px;padding:10px 12px;font-weight:700;cursor:pointer}
+.btn-save{background:#e9868d;color:#fff}.btn-release{background:#fff0e9;color:#9f5d43}.btn-toggle{background:#edf4e8;color:#5e7c4e}
+.admin-list{max-height:46vh;overflow:auto;padding-right:4px}
+.admin-note{font-size:12px;color:#8f7c73;line-height:1.4}
+#qrCode{display:flex;justify-content:center;margin:14px 0}.copybtn{width:100%;border:0;border-radius:9px;padding:12px;background:#e9868d;color:#fff;font-weight:700;cursor:pointer}
+@media(max-width:700px){.admin-row{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -43,6 +58,7 @@ body{display:flex;justify-content:center}
 <a class="hotspot" id="lista" href="#lista-presentes"></a>
 <a class="hotspot" id="como" href="#como-funciona"></a>
 <a class="hotspot" id="pix" href="#" onclick="openPix();return false;"></a>
+<a class="hotspot" id="adminBtn" href="#" onclick="openAdmin();return false;" aria-label="Área dos noivos"></a>
 <span id="como-funciona" style="position:absolute;top:33%"></span>
 <span id="lista-presentes" style="position:absolute;top:41%"></span>
 <div class="gift-control c1" data-id="panelas"></div>
@@ -63,7 +79,7 @@ body{display:flex;justify-content:center}
 <input id="guestName" maxlength="60" placeholder="Digite seu nome">
 <div class="actions"><button class="cancel" type="button" onclick="closeGift()">Cancelar</button><button class="confirm" type="button" onclick="confirmGift()">Confirmar presente</button></div>
 </div>
-<div class="success" id="giftSuccess"><div class="big">♥</div><h2>Presente reservado!</h2><p>Obrigada pelo carinho. Seu presente foi marcado como escolhido neste aparelho.</p><div class="actions"><button class="confirm" type="button" onclick="closeGift()">Fechar</button></div></div>
+<div class="success" id="giftSuccess"><div class="big">♥</div><h2>Presente reservado!</h2><p>Obrigada pelo carinho. Seu presente foi reservado com sucesso.</p><div class="actions"><button class="confirm" type="button" onclick="closeGift()">Fechar</button></div></div>
 </div></div>
 
 <div class="modal" id="pixModal"><div class="dialog">
@@ -72,138 +88,99 @@ body{display:flex;justify-content:center}
 <div class="actions"><button class="confirm" type="button" onclick="closePix()">Fechar</button></div>
 </div></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-const SUPABASE_URL = "https://zqkeyhfhtoarnzbmjcif.supabase.co";
-const SUPABASE_KEY = "sb_publishable_dSXhJMP6xS2ufIpktaCsLw_u8kCccsO";
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL="https://zqkeyhfhtoarnzbmjcif.supabase.co";
+const SUPABASE_KEY="sb_publishable_dSXhJMP6xS2ufIpktaCsLw_u8kCccsO";
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let reservations={},giftData={},currentId=null,adminSecretValue="",pixPublic=null;
 
-const gifts = {
-  panelas:"Jogo de Panelas",
-  pratos:"Jogo de Pratos",
-  liquidificador:"Liquidificador",
-  toalhas:"Jogo de Toalhas",
-  tacas:"Jogo de Taças",
-  cafeteira:"Cafeteira",
-  faqueiro:"Faqueiro",
-  cesto:"Cesto de Roupas"
-};
-
-let reservations = {};
-let currentId = null;
-let refreshTimer = null;
-
-function render() {
-  document.querySelectorAll(".gift-control").forEach(function(el) {
-    const id = el.dataset.id;
-    const chosen = !!reservations[id];
-
-    if (chosen) {
-      el.innerHTML =
-        '<div class="status reserved">🔒 Já escolhido</div>' +
-        '<div class="who">&nbsp;</div>' +
-        '<button type="button" disabled>Presente reservado</button>';
-    } else {
-      el.innerHTML =
-        '<div class="status available">Disponível</div>' +
-        '<div class="who">&nbsp;</div>' +
-        '<button type="button">Escolher este presente</button>';
-
-      el.querySelector("button").addEventListener("click", function() {
-        openGift(id);
-      });
-    }
-  });
+function render(){
+ document.querySelectorAll(".gift-control").forEach(el=>{
+  const id=el.dataset.id,g=giftData[id]||{},chosen=!!reservations[id],active=g.active!==false;
+  if(!active){el.innerHTML='<div class="status reserved">Indisponível</div><div class="who">&nbsp;</div><button disabled>Temporariamente indisponível</button>';return}
+  if(chosen){el.innerHTML='<div class="status reserved">🔒 Já escolhido</div><div class="who">&nbsp;</div><button disabled>Presente reservado</button>'}
+  else{el.innerHTML='<div class="status available">Disponível</div><div class="who">&nbsp;</div><button>Escolher este presente</button>';el.querySelector("button").onclick=()=>openGift(id)}
+ });
 }
-
-async function loadReservations() {
-  try {
-    const { data, error } = await sb.rpc("list_gift_status");
-    if (error) throw error;
-
-    reservations = {};
-    (data || []).forEach(function(item) {
-      reservations[item.id] = item.is_reserved;
-    });
-    render();
-  } catch (err) {
-    console.error("Erro ao carregar presentes:", err);
-  }
+async function loadReservations(){
+ const {data,error}=await sb.rpc("list_gift_status"); if(error){console.error(error);return}
+ reservations={};giftData={};(data||[]).forEach(x=>{reservations[x.id]=x.is_reserved;giftData[x.id]=x});render();
 }
-
-function openGift(id) {
-  if (reservations[id]) return;
-
-  currentId = id;
-  document.getElementById("giftTitle").textContent = gifts[id];
-  document.getElementById("guestName").value = "";
-  document.getElementById("giftForm").classList.remove("hide");
-  document.getElementById("giftSuccess").classList.remove("show");
-  document.getElementById("giftModal").classList.add("open");
-
-  setTimeout(function() {
-    document.getElementById("guestName").focus();
-  }, 60);
+function openGift(id){if(reservations[id]||giftData[id]?.active===false)return;currentId=id;giftTitle.textContent=giftData[id]?.name||id;guestName.value="";giftForm.classList.remove("hide");giftSuccess.classList.remove("show");giftModal.classList.add("open")}
+function closeGift(){giftModal.classList.remove("open");currentId=null}
+async function confirmGift(){
+ const name=guestName.value.trim();if(!name)return alert("Digite seu nome para confirmar.");
+ const btn=document.querySelector("#giftForm .confirm");btn.disabled=true;btn.textContent="Reservando...";
+ const {error}=await sb.rpc("reserve_gift",{p_id:currentId,p_name:name});
+ if(error){await loadReservations();alert("Este presente já foi escolhido ou está indisponível.");closeGift()}else{await loadReservations();giftForm.classList.add("hide");giftSuccess.classList.add("show")}
+ btn.disabled=false;btn.textContent="Confirmar presente";
 }
-
-function closeGift() {
-  document.getElementById("giftModal").classList.remove("open");
-  currentId = null;
+async function loadPix(){const {data}=await sb.rpc("get_pix_public");if(data&&data[0])pixPublic=data[0]}
+function emv(id,v){v=String(v||"");return id+String(v.length).padStart(2,"0")+v}
+function crc16(s){let crc=0xFFFF;for(let c=0;c<s.length;c++){crc^=s.charCodeAt(c)<<8;for(let i=0;i<8;i++)crc=(crc&0x8000)?((crc<<1)^0x1021):(crc<<1);crc&=0xFFFF}return crc.toString(16).toUpperCase().padStart(4,"0")}
+function norm(s,max){return String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z0-9 .-]/g,"").slice(0,max)}
+function pixPayload(p){const merchant=emv("26",emv("00","BR.GOV.BCB.PIX")+emv("01",p.pix_key));const base=emv("00","01")+merchant+emv("52","0000")+emv("53","986")+emv("58","BR")+emv("59",norm(p.pix_name,25))+emv("60",norm(p.pix_city,15))+emv("62",emv("05","***"))+"6304";return base+crc16(base)}
+async function openPix(){
+ await loadPix();if(!pixPublic?.pix_key)return alert("Os dados do PIX ainda não foram configurados.");
+ document.querySelector("#pixModal .dialog").innerHTML=`<h2>Presente via PIX</h2><p><b>Titular:</b> ${pixPublic.pix_name||""}<br><b>Banco:</b> ${pixPublic.pix_bank||""}<br><b>Chave:</b> ${pixPublic.pix_key}</p><div id="qrCode"></div><button class="copybtn" onclick="copyPix()">Copiar chave PIX</button><div class="actions"><button class="cancel" onclick="closePix()">Fechar</button></div>`;
+ pixModal.classList.add("open");new QRCode(document.getElementById("qrCode"),{text:pixPayload(pixPublic),width:190,height:190});
 }
+function closePix(){pixModal.classList.remove("open")}
+async function copyPix(){await navigator.clipboard.writeText(pixPublic.pix_key);alert("Chave PIX copiada!")}
 
-async function confirmGift() {
-  const name = document.getElementById("guestName").value.trim();
-  if (!name) {
-    alert("Digite seu nome para confirmar.");
-    return;
-  }
-  if (!currentId) return;
-
-  const confirmButton = document.querySelector("#giftForm .confirm");
-  confirmButton.disabled = true;
-  confirmButton.textContent = "Reservando...";
-
-  try {
-    const { error } = await sb.rpc("reserve_gift", {
-      p_id: currentId,
-      p_name: name
-    });
-
-    if (error) {
-      await loadReservations();
-      alert("Este presente já foi escolhido por outra pessoa. Escolha outro, por favor.");
-      closeGift();
-      return;
-    }
-
-    await loadReservations();
-    document.getElementById("giftForm").classList.add("hide");
-    document.getElementById("giftSuccess").classList.add("show");
-  } catch (err) {
-    console.error(err);
-    alert("Não foi possível confirmar agora. Tente novamente em alguns segundos.");
-  } finally {
-    confirmButton.disabled = false;
-    confirmButton.textContent = "Confirmar presente";
-  }
+function openAdmin(){adminModal.classList.add("open");adminLogin.style.display="block";adminPanel.style.display="none";adminSecret.value=""}
+function closeAdmin(){adminModal.classList.remove("open")}
+async function adminEnter(){
+ const secret=adminSecret.value.trim();if(!secret)return alert("Digite a senha.");
+ await sb.rpc("admin_initialize",{p_secret:secret});
+ const {data,error}=await sb.rpc("admin_ok",{p_secret:secret});
+ if(error||data!==true)return alert("Senha inválida.");
+ adminSecretValue=secret;adminLogin.style.display="none";adminPanel.style.display="block";await loadAdmin();
 }
-
-function openPix() {
-  document.getElementById("pixModal").classList.add("open");
+async function loadAdmin(){
+ const [{data:gifts,error:gerr},{data:pix}]=await Promise.all([sb.rpc("admin_list_gifts",{p_secret:adminSecretValue}),sb.rpc("get_pix_public")]);
+ if(gerr)return alert("Não foi possível abrir a área dos noivos.");
+ if(pix&&pix[0]){pixKeyAdmin.value=pix[0].pix_key||"";pixNameAdmin.value=pix[0].pix_name||"";pixBankAdmin.value=pix[0].pix_bank||"";pixCityAdmin.value=pix[0].pix_city||""}
+ adminGiftList.innerHTML="";
+ gifts.forEach(g=>{const d=document.createElement("div");d.className="admin-card";d.innerHTML=`<h3>${esc(g.name)}</h3><input id="name_${g.id}" value="${esc(g.name)}"><textarea id="desc_${g.id}" placeholder="Descrição">${esc(g.description||"")}</textarea><div class="admin-actions"><button class="btn-save" onclick="saveGift('${g.id}',${g.active})">Salvar alterações</button><button class="btn-toggle" onclick="toggleGift('${g.id}',${!g.active})">${g.active?"Desativar presente":"Ativar presente"}</button>${g.is_reserved?`<button class="btn-release" onclick="releaseGift('${g.id}')">Liberar reserva</button>`:""}</div>`;adminGiftList.appendChild(d)})
 }
-function closePix() {
-  document.getElementById("pixModal").classList.remove("open");
-}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+async function saveGift(id,active){const {error}=await sb.rpc("admin_update_gift",{p_id:id,p_name:document.getElementById("name_"+id).value.trim(),p_description:document.getElementById("desc_"+id).value.trim(),p_active:active,p_secret:adminSecretValue});if(error)return alert("Erro ao salvar.");alert("Presente atualizado.");await Promise.all([loadAdmin(),loadReservations()])}
+async function toggleGift(id,newActive){const {error}=await sb.rpc("admin_update_gift",{p_id:id,p_name:document.getElementById("name_"+id).value.trim(),p_description:document.getElementById("desc_"+id).value.trim(),p_active:newActive,p_secret:adminSecretValue});if(error)return alert("Erro ao alterar.");await Promise.all([loadAdmin(),loadReservations()])}
+async function releaseGift(id){if(!confirm("Liberar esta reserva?"))return;const {error}=await sb.rpc("admin_release_gift",{p_id:id,p_secret:adminSecretValue});if(error)return alert("Não foi possível liberar.");await Promise.all([loadAdmin(),loadReservations()]);alert("Reserva liberada.")}
+async function savePix(){const {error}=await sb.rpc("admin_set_pix",{p_key:pixKeyAdmin.value.trim(),p_name:pixNameAdmin.value.trim(),p_bank:pixBankAdmin.value.trim(),p_city:pixCityAdmin.value.trim(),p_secret:adminSecretValue});if(error)return alert("Erro ao salvar o PIX.");await loadPix();alert("PIX atualizado.")}
 
-document.getElementById("giftModal").addEventListener("click", function(e) {
-  if (e.target.id === "giftModal") closeGift();
-});
-document.getElementById("pixModal").addEventListener("click", function(e) {
-  if (e.target.id === "pixModal") closePix();
-});
-
-loadReservations();
-refreshTimer = setInterval(loadReservations, 5000);
+giftModal.addEventListener("click",e=>{if(e.target.id==="giftModal")closeGift()});pixModal.addEventListener("click",e=>{if(e.target.id==="pixModal")closePix()});adminModal.addEventListener("click",e=>{if(e.target.id==="adminModal")closeAdmin()});
+loadReservations();loadPix();setInterval(loadReservations,5000);
 </script>
+
+
+<div class="modal" id="adminModal">
+  <div class="dialog" style="width:min(720px,96vw);max-height:92vh;overflow:auto">
+    <div id="adminLogin">
+      <h2>Área dos Noivos</h2>
+      <p>Digite a senha administrativa para editar presentes, liberar reservas e configurar o PIX.</p>
+      <label for="adminSecret">Senha</label>
+      <input id="adminSecret" type="password" placeholder="Digite a senha">
+      <div class="actions"><button class="cancel" onclick="closeAdmin()">Cancelar</button><button class="confirm" onclick="adminEnter()">Entrar</button></div>
+      <p class="admin-note">No primeiro acesso, a senha escolhida será cadastrada automaticamente.</p>
+    </div>
+    <div id="adminPanel" style="display:none">
+      <h2>Área dos Noivos</h2>
+      <div class="admin-card">
+        <h3>PIX</h3>
+        <div class="admin-row"><input id="pixKeyAdmin" placeholder="Chave PIX"><input id="pixNameAdmin" placeholder="Nome do titular"></div>
+        <div class="admin-row" style="margin-top:10px"><input id="pixBankAdmin" placeholder="Banco"><input id="pixCityAdmin" placeholder="Cidade"></div>
+        <div class="admin-actions"><button class="btn-save" onclick="savePix()">Salvar PIX</button></div>
+      </div>
+      <div class="admin-card"><h3>Presentes</h3><div id="adminGiftList" class="admin-list"></div></div>
+      <div class="actions"><button class="cancel" onclick="closeAdmin()">Fechar</button></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
