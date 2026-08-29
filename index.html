@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nosso Lar — Teste Offline</title>
+<style>
+:root{
+  --bg:#fffaf7; --card:#fffdfb; --text:#49382f; --muted:#7b6960;
+  --border:#eadbd5; --rose:#e9868d; --green:#edf4e8; --greenText:#5e7c4e;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+body{min-height:100vh}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--card);border-bottom:1px solid var(--border)}
+.brand-main{font:25px Georgia,serif}
+.brand-sub{font-size:10px;letter-spacing:2px;color:var(--rose);margin-top:4px}
+.admin{border:1px solid #efc9c9;background:#fff8f6;color:#8c5b58;border-radius:999px;padding:10px 13px;font-size:13px;font-weight:700}
+.hero{margin:18px 16px 0;padding:22px 18px;background:var(--card);border:1px solid var(--border);border-radius:18px;text-align:center}
+.hero .event{font-size:11px;letter-spacing:3px;color:#8c7064;margin-bottom:8px}
+.hero .couple{font:34px Georgia,serif;margin-bottom:6px}
+.hero .script{font:italic 27px Georgia,serif;color:var(--rose);margin-bottom:8px}
+.hero .heart{color:var(--rose);font-size:18px;margin-bottom:8px}
+.hero p{font-size:13px;line-height:1.5;margin:0}
+.steps{margin:18px 16px 0;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.step{display:flex;align-items:center;gap:12px;padding:14px 15px;font-size:13px}
+.step+.step{border-top:1px solid #efe3de}
+.ico{width:38px;min-width:38px;font-size:28px;text-align:center;color:var(--rose)}
+main{padding:24px 14px}
+h2{text-align:center;font:32px Georgia,serif;margin:0 0 16px}
+.tools{display:grid;gap:10px;margin-bottom:16px}
+.tools input,.tools select{width:100%;min-height:46px;border:1px solid #e7d4cc;border-radius:12px;background:var(--card);padding:0 14px;font-size:16px;color:var(--text)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{background:var(--card);border:1px solid #e8d8d1;border-radius:14px;overflow:hidden}
+.card .pic{aspect-ratio:1.15/1;background:linear-gradient(145deg,#f4e8df,#fdf8f4);display:flex;align-items:center;justify-content:center;font-size:54px}
+.body{padding:10px 9px 11px;text-align:center}
+.body h3{font:17px Georgia,serif;margin:0 0 7px;min-height:39px;display:flex;align-items:center;justify-content:center}
+.status{display:inline-block;background:var(--green);color:var(--greenText);border-radius:999px;padding:4px 9px;font-size:11px;margin-bottom:8px}
+.card button{width:100%;min-height:38px;border:1px solid #efb7b7;border-radius:8px;background:#fbdede;color:#9e343b;font-size:12px;font-weight:700}
+.pager{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:18px}
+.pager button{min-height:42px;border:1px solid #e3d4ce;background:var(--card);color:#66534a;border-radius:10px;padding:0 14px}
+.pager button:disabled{opacity:.4}
+.pix{margin:0 14px 24px;padding:16px;border:1px solid var(--border);border-radius:16px;background:var(--card);text-align:center}
+.pix h3{font:21px Georgia,serif;margin:0 0 6px}
+.pix p{font-size:13px;color:#6f5b52}
+.pix button{width:100%;min-height:46px;border:0;border-radius:10px;background:var(--rose);color:white;font-weight:700;font-size:14px}
+footer{padding:22px 18px 30px;text-align:center;border-top:1px solid #efe3de}
+footer .main{font:italic 20px Georgia,serif;margin-bottom:7px}
+footer .couple{font-size:12px}
+
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.38);padding:14px;align-items:center;justify-content:center;z-index:20}
+.modal.open{display:flex}
+.dialog{width:100%;max-width:420px;background:var(--card);border-radius:18px;padding:20px}
+.dialog h3{font:28px Georgia,serif;margin:0 0 10px}
+.dialog p{font-size:14px;line-height:1.5}
+.key{font-weight:700}
+.copy{width:100%;min-height:46px;border:0;border-radius:10px;background:var(--rose);color:white;font-weight:700;font-size:14px;margin-top:8px}
+.close{width:100%;min-height:44px;border:0;border-radius:10px;background:#f3ebe7;color:var(--text);font-weight:700;margin-top:10px}
+.note{margin:10px 14px 0;padding:9px 11px;border-radius:10px;background:#fff4e8;color:#7a5b43;font-size:12px;text-align:center}
+@media(max-width:370px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="brand-main">⌂♡ Nosso Lar</div>
+    <div class="brand-sub">ROBERTA & TÚLIO</div>
+  </div>
+  <button class="admin" type="button">Área do Casal 🔒</button>
+</header>
+
+<div class="note">Teste offline do celular. Aqui presentes, busca, paginação e PIX funcionam sem internet.</div>
+
+<section class="hero">
+  <div class="event">CHÁ DE CASA NOVA</div>
+  <div class="couple">Roberta & Túlio</div>
+  <div class="script">Nosso novo lar</div>
+  <div class="heart">♥</div>
+  <p>Sua presença já é um presente muito especial! Mas, se quiser nos presentear, preparamos uma lista com muito carinho.</p>
+</section>
+
+<section class="steps">
+  <div class="step"><div class="ico">🎁</div><div>Escolha um presente da nossa lista</div></div>
+  <div class="step"><div class="ico">♡</div><div>Clique para reservar e preencha seus dados</div></div>
+  <div class="step"><div class="ico">🌿</div><div>Pronto! Agora é só levar o presente na data do chá.</div></div>
+</section>
+
+<main>
+  <h2>Lista de Presentes</h2>
+  <div class="tools">
+    <input id="q" type="search" placeholder="Buscar presente...">
+    <select id="f">
+      <option value="all">Todos os presentes</option>
+      <option value="available">Disponíveis</option>
+    </select>
+  </div>
+  <div id="grid" class="grid"></div>
+  <div class="pager">
+    <button id="prev" type="button">‹ Anterior</button>
+    <span id="info">1 / 1</span>
+    <button id="next" type="button">Próxima ›</button>
+  </div>
+</main>
+
+<section class="pix">
+  <h3>Prefere nos presentear com um valor?</h3>
+  <p>Você pode nos presentear com um valor em dinheiro via PIX.</p>
+  <button id="pixBtn" type="button">Ver dados para PIX ♡</button>
+</section>
+
+<footer>
+  <div class="main">Obrigado por fazer parte desse momento!</div>
+  <div class="couple">Roberta & Túlio</div>
+</footer>
+
+<div id="pixModal" class="modal">
+  <div class="dialog">
+    <h3>Presente via PIX</h3>
+    <p><b>Titular:</b> Roberta Ribeiro<br><b>Banco:</b> Itau<br><b>Chave:</b> <span class="key">38999863133</span></p>
+    <button id="copyBtn" class="copy" type="button">Copiar chave PIX</button>
+    <button id="closeBtn" class="close" type="button">Fechar</button>
+  </div>
+</div>
+
+<script>
+const gifts=[
+  ["Jogo de Panelas","🍳"],["Jogo de Pratos","🍽️"],["Liquidificador","🥤"],
+  ["Jogo de Toalhas","🧺"],["Jogo de Taças","🥂"],["Cafeteira","☕"],
+  ["Faqueiro","🍴"],["Cesto de Roupas","🧺"],["Panela de Pressão","🍲"],
+  ["Potes Herméticos","🥫"],["Jarra de Vidro","🫗"],["Jogo de Vasilhas","🥣"]
+].map((x,i)=>({id:i,name:x[0],icon:x[1],active:true,reserved:false}));
+
+let page=1;
+const per=6;
+const q=document.getElementById("q"), f=document.getElementById("f"), grid=document.getElementById("grid");
+const prev=document.getElementById("prev"), next=document.getElementById("next"), info=document.getElementById("info");
+
+function filtered(){
+  const s=q.value.trim().toLowerCase();
+  return gifts.filter(g=>!s || g.name.toLowerCase().includes(s));
+}
+function render(reset=false){
+  if(reset) page=1;
+  const list=filtered();
+  const pages=Math.max(1,Math.ceil(list.length/per));
+  if(page>pages) page=pages;
+  const start=(page-1)*per;
+  const rows=list.slice(start,start+per);
+  grid.innerHTML="";
+  rows.forEach(g=>{
+    const c=document.createElement("article");
+    c.className="card";
+    c.innerHTML=`<div class="pic">${g.icon}</div><div class="body"><h3>${g.name}</h3><div class="status">Disponível</div><button type="button">Escolher este presente</button></div>`;
+    c.querySelector("button").onclick=()=>alert("Teste offline: a reserva real funciona no site publicado.");
+    grid.appendChild(c);
+  });
+  if(!rows.length) grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:24px;color:#7b6960">Nenhum presente encontrado.</div>';
+  info.textContent=`${page} / ${pages}`;
+  prev.disabled=page<=1;
+  next.disabled=page>=pages;
+}
+q.addEventListener("input",()=>render(true));
+f.addEventListener("change",()=>render(true));
+prev.addEventListener("click",()=>{if(page>1){page--;render();}});
+next.addEventListener("click",()=>{const p=Math.max(1,Math.ceil(filtered().length/per));if(page<p){page++;render();}});
+
+const modal=document.getElementById("pixModal");
+document.getElementById("pixBtn").onclick=()=>modal.classList.add("open");
+document.getElementById("closeBtn").onclick=()=>modal.classList.remove("open");
+modal.addEventListener("click",e=>{if(e.target===modal)modal.classList.remove("open")});
+document.getElementById("copyBtn").onclick=()=>{
+  const btn=document.getElementById("copyBtn");
+  btn.textContent="Chave PIX copiada!";
+  setTimeout(()=>btn.textContent="Copiar chave PIX",1200);
+};
+
+render();
+</script>
+</body>
+</html>
